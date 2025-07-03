@@ -163,7 +163,7 @@ Encuentra
 - para cada clasificación de la tabla film 
 - y muestra la clasificación (junto con el promedio de duración).
 
---> TABLA film: eating, lenght
+--> TABLA film: rating, lenght
 */
 
 SELECT rating AS 'Clasificación', AVG(length) AS 'Duración Promedio'
@@ -263,3 +263,88 @@ SELECT title AS 'Películas clasificación "R"', length AS 'Duración'
 FROM film
 WHERE length > 120 AND rating = 'R'; 
 -- 90 películas 
+
+/* Ejercicio 18:
+Muestra
+- el nombre y apellido de los actores 
+- que aparecen en más de 10 películas.
+
+--> TABLA actor: first_name, last_name, actor_id
+--> TABLA film_actor:                   actor_id, film_id
+*/
+                      -- subconsulta: actor_id <-> film_id
+SELECT actor_id, COUNT(film_id) AS 'Número de Películas'
+FROM film_actor
+GROUP BY actor_id
+HAVING COUNT(film_id) > 10; 
+-- 200 filas, todos en más de 10 pelis
+
+                                       -- > SOLUCIÓN < --
+SELECT first_name, last_name
+FROM actor
+WHERE actor_id IN   (SELECT actor_id
+					FROM film_actor
+					GROUP BY actor_id
+					HAVING COUNT(film_id) > 10 ); 
+-- Todos
+
+
+/* Ejercicio 19:
+Hay algún actor o actriz 
+- que no apareca en ninguna película en la tabla film_actor.
+
+--> TABLA actor:       actor_id
+--> TABLA film_actor:  actor_id, film_id
+*/
+
+SELECT actor_id
+FROM film_actor
+WHERE actor_id NOT IN   (SELECT DISTINCT actor_id
+						FROM actor ); 
+-- 0, están todos
+
+/* Ejercicio 20:
+Encuentra 
+- las categorías de películas 
+- que tienen un promedio de duración superior a 120 minutos 
+- y muestra el nombre de la categoría junto con el promedio de duración.
+
+--> TABLA category:name, category_id
+--> TABLA film_category: category_id, film_id
+--> TABLA film:                       film_id, length
+*/
+
+SELECT c.name AS 'Nombre Categoría', AVG(f.length) as 'Duración Promedio'
+FROM film                AS f
+INNER JOIN film_category AS fc  ON f.film_id = fc.film_id
+INNER JOIN category      AS c   ON c.category_id = fc.category_id
+GROUP BY fc.category_id            -- duración promedio de cada categoría
+HAVING AVG(f.length) > 120; 
+-- mayor a 120: 4 
+-- (7,9,10,15) = (Drama, Foreign, Games, Sports)
+
+/* Ejercicio 21:
+Encuentra 
+- los actores 
+- que han actuado en al menos 5 películas 
+- y muestra el nombre del actor 
+- junto con la cantidad de películas en las que han actuado.
+
+--> TABLA actor: first_name, last_name, actor_id
+--> TABLA film_actor:                   actor_id, film_id
+*/
+
+SELECT 
+	CONCAT(a.first_name, ' ', a.last_name) AS 'Nombre Actor', 
+	COUNT(fa.film_id) AS 'Número de Películas'
+FROM 
+	film_actor AS fa
+INNER JOIN
+	actor      AS a      ON fa.actor_id = a.actor_id
+GROUP BY 
+	fa.actor_id
+HAVING 
+	COUNT(fa.film_id) > 5;
+-- 200 actores (todos más de 5 películas)
+
+    
